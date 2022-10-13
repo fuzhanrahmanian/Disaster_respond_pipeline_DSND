@@ -130,24 +130,30 @@ def build_model():
         ml_pipeline: the model pipeline
     """
 
-    ml_pipeline = Pipeline([
-            ('features', FeatureUnion([
-                ('text_pipeline', Pipeline([
-                    ('vect', CountVectorizer(tokenizer=tokenize)),
-                    ('tfidf', TfidfTransformer())
-                ])),
-                ('starting_verb', StartingVerbExtrator())
-            ])),
-            ('clf', MultiOutputClassifier(RandomForestClassifier()))
-        ])
+    # ml_pipeline = Pipeline([
+    #         ('features', FeatureUnion([
+    #             ('text_pipeline', Pipeline([
+    #                 ('vect', CountVectorizer(tokenizer=tokenize)),
+    #                 ('tfidf', TfidfTransformer())
+    #             ])),
+    #             ('starting_verb', StartingVerbExtrator())
+    #         ])),
+    #         ('clf', MultiOutputClassifier(RandomForestClassifier()))
+    #     ])
+    # build pipeline
+    ml_pipeline = Pipeline([('vect', CountVectorizer(tokenizer = tokenize)),
+                         ('tfidf', TfidfTransformer()),
+                         ('clf', MultiOutputClassifier(RandomForestClassifier()))
+                        ])
 
     parameters = {
-        'features__text_pipeline__vect__ngram_range': ((1, 1), (1, 2)),
+        #'features__text_pipeline__vect__ngram_range': ((1, 1), (1, 2)),
+        'clf__estimator__min_samples_split': [2, 4],
         'clf__estimator__n_estimators': [50, 100]
         }
 
     # define a gridsearvh object
-    grid_pipeline = GridSearchCV(ml_pipeline, param_grid=parameters, n_jobs=-1)
+    grid_pipeline = GridSearchCV(ml_pipeline, param_grid=parameters)
 
     return grid_pipeline
 
@@ -162,7 +168,7 @@ def evaluate_model(model, X_test, Y_test, category_names):
     """
 
     # predict the labels
-    y_pred = model.best_estimator_.predict(X_test)
+    y_pred = model.predict(X_test)
 
 
     # print the classification report
@@ -180,7 +186,7 @@ def save_model(model, model_filepath):
         model_filepath (str): the path to save the model
     """
     with open(model_filepath, 'wb') as file:
-        pickle.dump(model.best_estimator_, file)
+        pickle.dump(model, file)
 
 def main():
     if len(sys.argv) == 3:
