@@ -53,6 +53,8 @@ def clean_data(df):
     df = pd.concat([df, categories], axis=1)
     # drop duplicates
     df.drop_duplicates(inplace=True)
+    # removing non-binary values
+    df = df[df['related'] != 2]
 
     return df
 
